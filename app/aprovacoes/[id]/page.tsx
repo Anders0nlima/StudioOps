@@ -18,8 +18,10 @@ import {
   FileText, 
   Clock, 
   AlertCircle,
-  Eye,
-  Bot
+  Copy,
+  CheckCheck,
+  Share2,
+  Trash2
 } from 'lucide-react';
 import type { Video } from '@/lib/supabase/types';
 
@@ -35,6 +37,14 @@ export default function ScriptDetailPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Campos editáveis
+  const [titulo, setTitulo] = useState('');
+  const [roteiro, setRoteiro] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     async function loadVideo() {
       setIsLoading(true);
@@ -42,7 +52,15 @@ export default function ScriptDetailPage({ params }: PageProps) {
         const res = await fetch(`/api/videos/${id}`);
         const data = await res.json();
         if (data.success && data.video) {
-          setVideo(data.video);
+          const v: Video = data.video;
+          setVideo(v);
+          setTitulo(v.titulo || v.ideia || '');
+          setRoteiro(v.roteiro || '');
+          setTags(v.metadata_seo?.tags || ['ia', 'youtube-dark', 'renda-extra', 'inteligencia-artificial']);
+          setDescricao(
+            v.metadata_seo?.descricao ||
+            `Aprenda neste vídeo completo como dominar ferramentas de inteligência artificial para automação de canal no YouTube.\n\n⏰ Timestamps:\n0:00 - Introdução\n1:15 - Pesquisa com IA\n3:45 - Roteiro & Storytelling\n7:30 - Conclusão`
+          );
         } else {
           setError('Vídeo não encontrado');
         }
@@ -55,6 +73,30 @@ export default function ScriptDetailPage({ params }: PageProps) {
 
     loadVideo();
   }, [id]);
+
+  // Métricas do roteiro
+  const wordCount = roteiro.trim() ? roteiro.trim().split(/\s+/).length : 0;
+  const estimatedReadingMinutes = Math.max(1, Math.ceil(wordCount / 140));
+
+  const handleCopyScript = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(roteiro);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleAddTag = () => {
+    const trimmed = newTag.trim().toLowerCase().replace(/^#/, '');
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
 
   return (
     <>
@@ -122,16 +164,156 @@ export default function ScriptDetailPage({ params }: PageProps) {
               <Badge variant="purple">Revisão HITL Ativa</Badge>
             </div>
 
-            {/* Content placeholder to be populated in next commits */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">{video.titulo || video.ideia}</CardTitle>
-                <CardDescription>ID: {video.id}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs text-slate-300">Carregando painéis de edição de roteiro e metadados...</p>
-              </CardContent>
-            </Card>
+            {/* Main Dual Panel Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column (7 cols): Script Editor */}
+              <div className="lg:col-span-7 space-y-4">
+                <Card className="flex flex-col h-full">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-800/80">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-purple-400" />
+                      <CardTitle className="text-sm">Roteiro Completo (Copy do Luca)</CardTitle>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyScript}
+                        className="h-7 text-xs text-slate-300 hover:text-white gap-1"
+                      >
+                        {copied ? (
+                          <>
+                            <CheckCheck className="h-3.5 w-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copiado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            <span>Copiar</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-4 flex-1 flex flex-col space-y-3">
+                    {/* Script metrics bar */}
+                    <div className="flex items-center gap-4 text-xs text-slate-400 font-mono py-1 px-3 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                      <span>{wordCount} palavras</span>
+                      <span>•</span>
+                      <span className="text-indigo-400 font-medium">~{estimatedReadingMinutes} min de vídeo</span>
+                      <span>•</span>
+                      <span>{roteiro.length} caracteres</span>
+                    </div>
+
+                    {/* Script Textarea */}
+                    <textarea
+                      rows={16}
+                      value={roteiro}
+                      onChange={(e) => setRoteiro(e.target.value)}
+                      placeholder="Cole ou digite o roteiro aqui..."
+                      className="w-full flex-1 rounded-xl border border-slate-800 bg-slate-950/90 p-4 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed resize-y transition-colors"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column (5 cols): SEO & Title Editor */}
+              <div className="lg:col-span-5 space-y-5">
+                {/* Título Otimizado */}
+                <Card>
+                  <CardHeader className="pb-3 border-b border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xs uppercase tracking-wider text-slate-400">
+                        Título Otimizado (Nando)
+                      </CardTitle>
+                      <span className={`text-[10px] font-mono ${titulo.length > 70 ? 'text-amber-400' : 'text-slate-400'}`}>
+                        {titulo.length}/70 chars
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-2">
+                    <input
+                      type="text"
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Título viral para o YouTube..."
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      Títulos com menos de 70 caracteres não são cortados nas telas de smartphones.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Tags SEO */}
+                <Card>
+                  <CardHeader className="pb-3 border-b border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xs uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Tags para Indexação</span>
+                      </CardTitle>
+                      <Badge variant="outline" className="text-[10px]">
+                        {tags.length} tags
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="flex flex-wrap gap-1.5 min-h-[50px] p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+                      {tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200"
+                        >
+                          #{tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="text-slate-400 hover:text-rose-400 ml-0.5 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTag();
+                          }
+                        }}
+                        placeholder="+ Adicionar tag (Enter)"
+                        className="bg-transparent text-[11px] text-white placeholder-slate-500 border-none outline-none w-36 px-1"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Descrição com Timestamps */}
+                <Card>
+                  <CardHeader className="pb-3 border-b border-slate-800/80">
+                    <CardTitle className="text-xs uppercase tracking-wider text-slate-400">
+                      Descrição do YouTube & Timestamps
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <textarea
+                      rows={5}
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                      placeholder="Descrição do vídeo..."
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-300 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         )}
       </main>
