@@ -1,0 +1,90 @@
+{
+  "name": "02 - Luca & Nando: Roteirização e SEO Otimizado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gerar-roteiro",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "table": "videos",
+        "id": "={{ $json.body.video_id }}"
+      },
+      "name": "Supabase Get Idea",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "modelName": "claude-3-5-sonnet-20241022",
+        "prompt": "=Você é o Luca, roteirista profissional para YouTube. Com base na ideia: '{{ $json.ideia }}', elabore um roteiro completo estruturado em blocos de tempo ([INTRO - 0:00], [BLOCO 1], [CTA FINAL]). Use técnicas de storytelling e Few-Shot Prompting com aberturas de alta retenção."
+      },
+      "name": "Claude 3.5 Sonnet (Luca)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "modelName": "gpt-4o",
+        "prompt": "=Você é o Nando, especialista em SEO e CTR para YouTube. Receba o roteiro gerado pelo Luca e elabore: 1) Título viral de alto clique, 2) 15 tags separadas por vírgula, 3) Descrição envolvente com timestamps. Retorne em JSON: { 'titulo_otimizado': '...', 'tags': [...], 'descricao': '...' }"
+      },
+      "name": "GPT-4o (Nando)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "videos",
+        "id": "={{ $('Webhook Trigger').item.json.body.video_id }}",
+        "columns": "roteiro, metadata_seo, status",
+        "values": "={{ $('Claude 3.5 Sonnet (Luca)').item.json.text }}, ={{ $('GPT-4o (Nando)').item.json.metadata }}, 'pendente'"
+      },
+      "name": "Supabase Update Video",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "agent_logs",
+        "columns": "agente, mensagem, video_id, tipo, estado",
+        "values": "'nando', 'Chefe, o roteiro do Luca e os metadados de SEO estão prontos. Aguardando sua aprovação para agendar!', ={{ $('Webhook Trigger').item.json.body.video_id }}, 'info', 'waiting_approval'"
+      },
+      "name": "Supabase Notify Approval",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1320, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Supabase Get Idea", "type": "main", "index": 0 }]]
+    },
+    "Supabase Get Idea": {
+      "main": [[{ "node": "Claude 3.5 Sonnet (Luca)", "type": "main", "index": 0 }]]
+    },
+    "Claude 3.5 Sonnet (Luca)": {
+      "main": [[{ "node": "GPT-4o (Nando)", "type": "main", "index": 0 }]]
+    },
+    "GPT-4o (Nando)": {
+      "main": [[{ "node": "Supabase Update Video", "type": "main", "index": 0 }]]
+    },
+    "Supabase Update Video": {
+      "main": [[{ "node": "Supabase Notify Approval", "type": "main", "index": 0 }]]
+    }
+  }
+}

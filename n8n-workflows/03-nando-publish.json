@@ -1,0 +1,82 @@
+{
+  "name": "03 - Nando: Publicação e Agendamento no YouTube",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publicar",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "table": "videos",
+        "id": "={{ $json.body.video_id }}"
+      },
+      "name": "Supabase Get Approved Video",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.titulo }}",
+        "description": "={{ $json.metadata_seo.descricao }}",
+        "tags": "={{ $json.metadata_seo.tags.join(',') }}",
+        "privacyStatus": "scheduled",
+        "publishAt": "={{ $('Webhook Trigger').item.json.body.schedule_date || $now.plus({ days: 1 }).toISO() }}"
+      },
+      "name": "YouTube API Upload & Schedule",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "videos",
+        "id": "={{ $('Webhook Trigger').item.json.body.video_id }}",
+        "columns": "status, youtube_video_id, agendado_para",
+        "values": "'publicado', ={{ $json.id }}, ={{ $('YouTube API Upload & Schedule').item.json.publishAt }}"
+      },
+      "name": "Supabase Mark Published",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "agent_logs",
+        "columns": "agente, mensagem, video_id, tipo, estado",
+        "values": "'nando', '🚀 Vídeo publicado e agendado com sucesso no YouTube!', ={{ $('Webhook Trigger').item.json.body.video_id }}, 'success', 'done'"
+      },
+      "name": "Supabase Log Published",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Supabase Get Approved Video", "type": "main", "index": 0 }]]
+    },
+    "Supabase Get Approved Video": {
+      "main": [[{ "node": "YouTube API Upload & Schedule", "type": "main", "index": 0 }]]
+    },
+    "YouTube API Upload & Schedule": {
+      "main": [[{ "node": "Supabase Mark Published", "type": "main", "index": 0 }]]
+    },
+    "Supabase Mark Published": {
+      "main": [[{ "node": "Supabase Log Published", "type": "main", "index": 0 }]]
+    }
+  }
+}

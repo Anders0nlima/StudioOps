@@ -29,44 +29,72 @@ export default function Home() {
   const [isResearching, setIsResearching] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Simulação interativa ao disparar pesquisa com o Endu
-  const handleTriggerResearch = () => {
+  // Disparo da API de pesquisa /api/research para acionar o Agente Endu
+  const handleTriggerResearch = async () => {
     setIsResearching(true);
-    updateAgentState('endu', 'thinking', 'Pesquisando tendências e comentários em alta no YouTube...');
+    updateAgentState('endu', 'thinking', 'Pesquisando tendências e oportunidades via YouTube & Gemini...');
 
-    setTimeout(() => {
-      pushLog({
-        id: `log-${Date.now()}`,
-        agente: 'endu',
-        mensagem: 'Encontrei 3 temas com altíssima taxa de busca: "Ferramentas de IA para Vídeo", "Como Criar Roteiros Virais" e "Automação no YouTube". Enviando pauta selecionada para o Luca!',
-        tipo: 'success',
-        estado: 'done',
-        created_at: new Date().toISOString(),
+    try {
+      const res = await fetch('/api/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tema_foco: 'Inteligência Artificial e Ferramentas Práticas' }),
       });
-      setIsResearching(false);
+      const data = await res.json();
 
-      // Luca começa a trabalhar em seguida
-      setTimeout(() => {
-        updateAgentState('luca', 'working', 'Elaborando roteiro com ganchos de retenção...');
-      }, 1000);
-    }, 2500);
+      if (data.success) {
+        pushLog({
+          id: `log-${Date.now()}`,
+          agente: 'endu',
+          mensagem: `Identifiquei 3 novas pautas virais sobre IA e YouTube. A pauta principal foi enviada para o Luca redigir o roteiro!`,
+          tipo: 'success',
+          estado: 'done',
+          created_at: new Date().toISOString(),
+        });
+
+        // Luca entra no estado de trabalho
+        setTimeout(() => {
+          updateAgentState('luca', 'working', 'Estruturando roteiro e storytelling com Claude 3.5 Sonnet...');
+        }, 1200);
+      }
+    } catch (err) {
+      console.warn('Erro ao disparar pesquisa:', err);
+    } finally {
+      setIsResearching(false);
+    }
   };
 
-  const handleApproveFromFeed = (log: AgentLog) => {
+  // Aprovação via API /api/publish diretamente pelo feed
+  const handleApproveFromFeed = async (log: AgentLog) => {
     updateAgentState('nando', 'working', 'Enviando metadados e agendando no YouTube API...');
     setToastMessage('Aprovação confirmada! O Nando está disparando a publicação no YouTube.');
 
-    setTimeout(() => {
-      pushLog({
-        id: `log-${Date.now()}`,
-        agente: 'nando',
-        mensagem: '🚀 Vídeo agendado com sucesso no canal do YouTube! As tags e descrição foram indexadas.',
-        tipo: 'success',
-        estado: 'done',
-        created_at: new Date().toISOString(),
+    try {
+      const res = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_id: log.video_id || 'vid-1',
+          schedule_date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+        }),
       });
+      const data = await res.json();
+
+      if (data.success) {
+        pushLog({
+          id: `log-${Date.now()}`,
+          agente: 'nando',
+          mensagem: '🚀 Vídeo agendado com sucesso no canal do YouTube! As tags e descrição foram indexadas.',
+          tipo: 'success',
+          estado: 'done',
+          created_at: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.warn('Erro ao publicar:', err);
+    } finally {
       setTimeout(() => setToastMessage(null), 4000);
-    }, 2000);
+    }
   };
 
   return (
@@ -220,7 +248,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400">Orquestrador n8n</span>
-                  <Badge variant="outline">Fase 3</Badge>
+                  <Badge variant="success">4 Workflows JSON</Badge>
                 </div>
               </CardContent>
             </Card>
