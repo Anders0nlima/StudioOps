@@ -68,8 +68,36 @@ export function usePixelAgents() {
     updateAgentState(log.agente, log.estado, log.mensagem);
   }, [updateAgentState]);
 
+  // Transição de estado acionada pelo Human-in-the-Loop ao aprovar conteúdo
+  const recordApprovalAction = useCallback(async (videoId: string, targetDate: string) => {
+    updateAgentState('nando', 'working', 'Enviando metadados e agendando no YouTube API...');
+
+    const newLog: AgentLog = {
+      id: `log-${Date.now()}`,
+      agente: 'nando',
+      video_id: videoId,
+      mensagem: `🚀 Vídeo aprovado pelo Chefe e agendado com sucesso para ${new Date(targetDate).toLocaleString('pt-BR')} no YouTube!`,
+      tipo: 'success',
+      estado: 'done',
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      await supabase.from('agent_logs').insert({
+        agente: newLog.agente,
+        video_id: newLog.video_id,
+        mensagem: newLog.mensagem,
+        tipo: newLog.tipo,
+        estado: newLog.estado,
+      });
+    } catch (e) {
+      console.warn('[PixelAgents] Erro ao gravar log no Supabase:', e);
+    }
+
+    pushLog(newLog);
+  }, [pushLog, updateAgentState]);
+
   useEffect(() => {
-    // 1. Tentar carregar logs históricos do Supabase
     async function fetchInitialLogs() {
       try {
         const { data, error } = await supabase
@@ -81,7 +109,6 @@ export function usePixelAgents() {
         if (!error && data && data.length > 0) {
           setLogs(data as AgentLog[]);
           
-          // Derivar estados mais recentes
           const latestStates: Record<AgentName, AgentRealtimeState> = { ...agentStates };
           data.forEach((item: any) => {
             const agentKey = item.agente as AgentName;
@@ -102,7 +129,6 @@ export function usePixelAgents() {
 
     fetchInitialLogs();
 
-    // 2. Conectar ao Supabase Realtime Channel
     try {
       const channel = supabase
         .channel('pixel_agents_feed')
@@ -140,5 +166,6 @@ export function usePixelAgents() {
     isConnected,
     pushLog,
     updateAgentState,
+    recordApprovalAction,
   };
 }
