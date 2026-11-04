@@ -1,0 +1,95 @@
+{
+  "name": "04 - Endu: Coleta de Métricas e Análise de Sentimento",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule 24h Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "table": "videos",
+        "filters": "status=eq.publicado"
+      },
+      "name": "Supabase Get Published Videos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "comment",
+        "operation": "getAll",
+        "videoId": "={{ $json.youtube_video_id }}",
+        "limit": 100
+      },
+      "name": "YouTube Get Comments",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "prompt": "=Você é o Endu. Analise esta lista de comentários recentes do YouTube e classifique o sentimento de cada um (positivo, neutro, negativo). Além disso, extraia os 3 temas mais pedidos pela audiência para sugerir como pauta para o próximo vídeo. Retorne em JSON."
+      },
+      "name": "Gemini 1.5 Flash Sentiment",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "table": "metricas",
+        "columns": "video_id, views, likes, comentarios_total, sentimento_positivo, sentimento_negativo, sentimento_neutro",
+        "values": "={{ $('Supabase Get Published Videos').item.json.id }}, ={{ $json.views }}, ={{ $json.likes }}, ={{ $json.totalComments }}, ={{ $json.sentPositivo }}, ={{ $json.sentNegativo }}, ={{ $json.sentNeutro }}"
+      },
+      "name": "Supabase Upsert Metricas",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "agent_logs",
+        "columns": "agente, mensagem, tipo, estado",
+        "values": "'endu', 'Análise de métricas e sentimento finalizada. Identifiquei novos temas pedidos pela audiência!', 'info', 'done'"
+      },
+      "name": "Supabase Log Cycle Finished",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Schedule 24h Cron": {
+      "main": [[{ "node": "Supabase Get Published Videos", "type": "main", "index": 0 }]]
+    },
+    "Supabase Get Published Videos": {
+      "main": [[{ "node": "YouTube Get Comments", "type": "main", "index": 0 }]]
+    },
+    "YouTube Get Comments": {
+      "main": [[{ "node": "Gemini 1.5 Flash Sentiment", "type": "main", "index": 0 }]]
+    },
+    "Gemini 1.5 Flash Sentiment": {
+      "main": [[{ "node": "Supabase Upsert Metricas", "type": "main", "index": 0 }]]
+    },
+    "Supabase Upsert Metricas": {
+      "main": [[{ "node": "Supabase Log Cycle Finished", "type": "main", "index": 0 }]]
+    }
+  }
+}

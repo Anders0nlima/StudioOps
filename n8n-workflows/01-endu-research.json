@@ -1,0 +1,62 @@
+{
+  "name": "01 - Endu: Pesquisa e Ideação de Pautas Virais",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pesquisar-ideias",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "prompt": "=Você é o Endu, um estrategista de dados e inteligência artificial para o YouTube. Analise as tendências atuais e gere 3 tópicos de alto impacto com potencial viral sobre Inteligência Artificial, ferramentas práticas e monetização no YouTube. Retorne em formato JSON estruturado com 'ideias': [{ 'titulo': '...', 'resumo': '...', 'tags': [...] }]"
+      },
+      "name": "Gemini 1.5 Flash (Endu)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "videos",
+        "columns": "titulo, ideia, status",
+        "values": "={{ $json.titulo }}, ={{ $json.resumo }}, 'ideacao'"
+      },
+      "name": "Supabase Insert Videos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "agent_logs",
+        "columns": "agente, mensagem, tipo, estado",
+        "values": "'endu', 'Identifiquei 3 novas oportunidades de conteúdo com alto potencial de busca e engajamento.', 'success', 'done'"
+      },
+      "name": "Supabase Log (Pixel Agents)",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Gemini 1.5 Flash (Endu)", "type": "main", "index": 0 }]]
+    },
+    "Gemini 1.5 Flash (Endu)": {
+      "main": [[{ "node": "Supabase Insert Videos", "type": "main", "index": 0 }]]
+    },
+    "Supabase Insert Videos": {
+      "main": [[{ "node": "Supabase Log (Pixel Agents)", "type": "main", "index": 0 }]]
+    }
+  }
+}
