@@ -5,12 +5,16 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { AgentHQ } from '@/components/pixel-agents/AgentHQ';
 import { AgentFeed } from '@/components/pixel-agents/AgentFeed';
+import { MetricsCards } from '@/components/dashboard/MetricsCards';
+import { PerformanceChart } from '@/components/dashboard/PerformanceChart';
+import { SentimentChart } from '@/components/dashboard/SentimentChart';
+import { VideoComparisonChart } from '@/components/dashboard/VideoComparisonChart';
+import { RecommendationsPanel } from '@/components/dashboard/RecommendationsPanel';
 import { usePixelAgents } from '@/lib/pixel-agents/realtime';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { StatusPill } from '@/components/ui/StatusPill';
-import { YoutubeIcon } from '@/components/ui/Icons';
 import { 
   Sparkles, 
   Bot, 
@@ -20,12 +24,14 @@ import {
   CheckCircle2, 
   TrendingUp, 
   Cpu,
-  Layers
+  Layers,
+  BarChart3
 } from 'lucide-react';
 import type { AgentLog } from '@/lib/supabase/types';
 
 export default function Home() {
   const { logs, agentStates, isConnected, pushLog, updateAgentState } = usePixelAgents();
+  const [activeTab, setActiveTab] = useState<'squad' | 'analytics'>('squad');
   const [isResearching, setIsResearching] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -52,7 +58,6 @@ export default function Home() {
           created_at: new Date().toISOString(),
         });
 
-        // Luca entra no estado de trabalho
         setTimeout(() => {
           updateAgentState('luca', 'working', 'Estruturando roteiro e storytelling com Claude 3.5 Sonnet...');
         }, 1200);
@@ -161,99 +166,166 @@ export default function Home() {
           <div className="absolute right-32 -bottom-16 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
         </div>
 
-        {/* Pixel Agents HQ Module */}
-        <AgentHQ
-          agentStates={agentStates}
-          isConnected={isConnected}
-          onTriggerResearch={handleTriggerResearch}
-          isResearching={isResearching}
-        />
+        {/* View Switcher Tabs (Fase 5) */}
+        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('squad')}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'squad'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <Bot className="h-4 w-4" />
+            <span>Pixel Agents & Feed ao Vivo</span>
+          </button>
 
-        {/* Live Feed + Pipeline Split */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Agent Live Feed (Slack-style) */}
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6">
-              <AgentFeed
-                logs={logs}
-                agentStates={agentStates}
-                onApprove={handleApproveFromFeed}
-                onEdit={() => {
-                  window.location.href = '/aprovacoes';
-                }}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Pipeline Stages & Quick Insights */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Workflow className="h-4 w-4 text-indigo-400" />
-                  Pipeline Human-in-the-Loop
-                </CardTitle>
-                <CardDescription>Fluxo orquestrado com os agentes</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <StatusPill status="ideacao" />
-                    <span className="text-xs text-slate-300">Pesquisa & Oportunidades</span>
-                  </div>
-                  <span className="text-xs text-blue-400 font-mono font-medium">Endu</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <StatusPill status="pendente" />
-                    <span className="text-xs text-slate-300">Roteiro + SEO</span>
-                  </div>
-                  <span className="text-xs text-purple-400 font-mono font-medium">Luca + Nando</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <StatusPill status="aprovado" />
-                    <span className="text-xs text-slate-300">Decisão Humana</span>
-                  </div>
-                  <span className="text-xs text-amber-400 font-mono font-semibold">Chefe (Você)</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <StatusPill status="publicado" />
-                    <span className="text-xs text-slate-300">Disparo YouTube API</span>
-                  </div>
-                  <span className="text-xs text-emerald-400 font-mono font-medium">Nando</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Cpu className="h-4 w-4 text-emerald-400" />
-                  Infraestrutura
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">PostgreSQL (Supabase)</span>
-                  <Badge variant="success">Schema Pronto</Badge>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Transport Realtime</span>
-                  <Badge variant="outline">Websocket</Badge>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Orquestrador n8n</span>
-                  <Badge variant="success">4 Workflows JSON</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'analytics'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Analytics & Inteligência de Sentimento</span>
+            <Badge variant="purple" className="text-[9px] px-1.5 py-0">Endu Data</Badge>
+          </button>
         </div>
+
+        {/* Tab 1: Squad & Live Feed View */}
+        {activeTab === 'squad' && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Pixel Agents HQ Module */}
+            <AgentHQ
+              agentStates={agentStates}
+              isConnected={isConnected}
+              onTriggerResearch={handleTriggerResearch}
+              isResearching={isResearching}
+            />
+
+            {/* Live Feed + Pipeline Split */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Agent Live Feed (Slack-style) */}
+              <Card className="lg:col-span-2">
+                <CardContent className="p-6">
+                  <AgentFeed
+                    logs={logs}
+                    agentStates={agentStates}
+                    onApprove={handleApproveFromFeed}
+                    onEdit={() => {
+                      window.location.href = '/aprovacoes';
+                    }}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Pipeline Stages & Quick Insights */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Workflow className="h-4 w-4 text-indigo-400" />
+                      Pipeline Human-in-the-Loop
+                    </CardTitle>
+                    <CardDescription>Fluxo orquestrado com os agentes</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <StatusPill status="ideacao" />
+                        <span className="text-xs text-slate-300">Pesquisa & Oportunidades</span>
+                      </div>
+                      <span className="text-xs text-blue-400 font-mono font-medium">Endu</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <StatusPill status="pendente" />
+                        <span className="text-xs text-slate-300">Roteiro + SEO</span>
+                      </div>
+                      <span className="text-xs text-purple-400 font-mono font-medium">Luca + Nando</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <StatusPill status="aprovado" />
+                        <span className="text-xs text-slate-300">Decisão Humana</span>
+                      </div>
+                      <span className="text-xs text-amber-400 font-mono font-semibold">Chefe (Você)</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <StatusPill status="publicado" />
+                        <span className="text-xs text-slate-300">Disparo YouTube API</span>
+                      </div>
+                      <span className="text-xs text-emerald-400 font-mono font-medium">Nando</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Cpu className="h-4 w-4 text-emerald-400" />
+                      Infraestrutura
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">PostgreSQL (Supabase)</span>
+                      <Badge variant="success">Schema Pronto</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Transport Realtime</span>
+                      <Badge variant="outline">Websocket</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Orquestrador n8n</span>
+                      <Badge variant="success">4 Workflows</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Analytics & Audience Intelligence View */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* 4 Summary Cards */}
+            <MetricsCards />
+
+            {/* Performance Trend + Sentiment Analysis */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-8">
+                <PerformanceChart />
+              </div>
+              <div className="lg:col-span-4">
+                <SentimentChart />
+              </div>
+            </div>
+
+            {/* Video Comparison + Endu Recommendations */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5">
+                <VideoComparisonChart />
+              </div>
+              <div className="lg:col-span-7">
+                <RecommendationsPanel
+                  onSelectTopic={() => {
+                    setToastMessage('Pauta selecionada! Luca e Nando começaram a formulação do roteiro.');
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
