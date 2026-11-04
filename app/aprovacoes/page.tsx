@@ -1,102 +1,110 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { KanbanBoard } from '@/components/approval/KanbanBoard';
 import { ScriptReviewModal } from '@/components/approval/ScriptReviewModal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Sparkles, Plus, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Plus, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import type { Video } from '@/lib/supabase/types';
 
-// Dados de demonstração realistas para visualização imediata da esteira
-const DEMO_VIDEOS: Video[] = [
-  {
-    id: 'vid-1',
-    titulo: 'Como Criar um Canal Dark no YouTube com IA em 2026',
-    ideia: 'Tutorial passo a passo ensinando a criar vídeos sem aparecer usando IA gratuita',
-    roteiro: `[INTRO - 0:00]\n"Se você acha que precisa gastar milhares de reais com câmeras e microfones para ter um canal rentável no YouTube em 2026, você está perdendo tempo. Hoje, uma pessoa sozinha usando três ferramentas gratuitas consegue gerar conteúdos com qualidade de estúdio."\n\n[BLOCO 1 - 1:15]\n"A primeira etapa é a pesquisa de tópicos virais. É aqui que o Gemini se destaca..."\n\n[BLOCO 2 - 3:45]\n"Para a narrativa e roteiro, o Claude 3.5 Sonnet entrega uma retenção 40% superior..."\n\n[CTA FINAL - 7:30]\n"Se você quer a lista completa dos prompts que usamos, deixe seu like e comente 'PROMPTS' abaixo!"`,
-    metadata_seo: {
-      tags: ['ia', 'youtube-dark', 'renda-extra', 'inteligencia-artificial', 'tutoriais'],
-      descricao: 'Descubra como criar um canal dark no YouTube usando apenas ferramentas de inteligência artificial gratuitas.',
-      titulo_otimizado: 'Como Criar um Canal Dark no YouTube com IA em 2026 (Passo a Passo)',
-    },
-    status: 'pendente',
-    youtube_video_id: null,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: 'vid-2',
-    titulo: '5 Ferramentas de IA Pouco Conhecidas que Superam o ChatGPT',
-    ideia: 'Comparativo prático de ferramentas de nicho para criadores de conteúdo',
-    roteiro: null,
-    metadata_seo: {
-      tags: ['chatgpt', 'ferramentas-ia', 'produtividade'],
-    },
-    status: 'ideacao',
-    youtube_video_id: null,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-  },
-  {
-    id: 'vid-3',
-    titulo: 'Quanto o YouTube Pagou por 100.000 Visualizações?',
-    ideia: 'Abertura de métricas reais de RPM e CPM de vídeos de tecnologia',
-    roteiro: 'Roteiro validado e aprovado pelo Chefe.',
-    metadata_seo: {
-      tags: ['monetizacao', 'cpm-youtube', 'financas'],
-      titulo_otimizado: 'Quanto o YouTube Me Pagou por 100 Mil Views? (Valores Reais Revelados)',
-    },
-    status: 'aprovado',
-    youtube_video_id: null,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-  {
-    id: 'vid-4',
-    titulo: 'Como Automatizar Seus Vídeos com n8n e IA',
-    ideia: 'Tutorial de automação completa com webhook e agentes',
-    roteiro: 'Roteiro publicado.',
-    metadata_seo: {
-      tags: ['n8n', 'automacao', 'youtube-api'],
-      titulo_otimizado: 'Automação Completa de YouTube com n8n e Agentes de IA',
-    },
-    status: 'publicado',
-    youtube_video_id: 'dQw4w9WgXcQ',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-];
-
 export default function AprovacoesPage() {
-  const [videos, setVideos] = useState<Video[]>(DEMO_VIDEOS);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Buscar vídeos da API
+  const fetchVideos = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/videos');
+      const data = await res.json();
+      if (data.success && data.videos) {
+        setVideos(data.videos);
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar vídeos:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
 
   const pendingCount = videos.filter((v) => v.status === 'pendente').length;
+
+  const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4500);
+  };
 
   const handleOpenReview = (video: Video) => {
     setSelectedVideo(video);
     setIsModalOpen(true);
   };
 
-  const handleApproveVideo = (updatedVideo: Video, scheduleDate?: string) => {
-    setVideos((prev) =>
-      prev.map((v) => (v.id === updatedVideo.id ? { ...updatedVideo, status: 'aprovado' } : v))
-    );
-    setToastMessage(`Vídeo "${updatedVideo.titulo}" aprovado e agendado com sucesso!`);
-    setTimeout(() => setToastMessage(null), 4000);
+  // Aprovar vídeo via API /api/publish
+  const handleApproveVideo = async (updatedVideo: Video, scheduleDate?: string) => {
+    try {
+      // 1. Atualizar eventuais edições feitas pelo Chefe via PATCH
+      await fetch(`/api/videos/${updatedVideo.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: updatedVideo.titulo,
+          roteiro: updatedVideo.roteiro,
+          metadata_seo: updatedVideo.metadata_seo,
+          agendado_para: scheduleDate,
+        }),
+      });
+
+      // 2. Disparar webhook de publicação e agendamento
+      const publishRes = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_id: updatedVideo.id,
+          schedule_date: scheduleDate,
+        }),
+      });
+      const publishData = await publishRes.json();
+
+      setVideos((prev) =>
+        prev.map((v) =>
+          v.id === updatedVideo.id
+            ? { ...updatedVideo, status: 'publicado', youtube_video_id: publishData.youtube_video_id }
+            : v
+        )
+      );
+
+      showToast(`Vídeo "${updatedVideo.titulo}" aprovado e agendado no canal com sucesso!`, 'success');
+    } catch (err) {
+      showToast('Erro ao processar publicação com a YouTube API.', 'error');
+    }
   };
 
-  const handleRejectVideo = (video: Video) => {
-    setVideos((prev) =>
-      prev.map((v) => (v.id === video.id ? { ...v, status: 'ideacao' } : v))
-    );
-    setIsModalOpen(false);
-    setToastMessage(`Vídeo devolvido para a etapa de Ideação para revisão pelo Luca.`);
-    setTimeout(() => setToastMessage(null), 4000);
+  // Rejeitar vídeo / Pedir alterações via API
+  const handleRejectVideo = async (video: Video) => {
+    try {
+      await fetch(`/api/videos/${video.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ideacao' }),
+      });
+
+      setVideos((prev) =>
+        prev.map((v) => (v.id === video.id ? { ...v, status: 'ideacao' } : v))
+      );
+      setIsModalOpen(false);
+      showToast('Roteiro retornado para a etapa de Ideação para revisão pelo Luca.', 'info');
+    } catch (err) {
+      showToast('Erro ao devolver roteiro.', 'error');
+    }
   };
 
   return (
@@ -107,23 +115,35 @@ export default function AprovacoesPage() {
       />
 
       <main className="p-8 max-w-7xl mx-auto w-full space-y-6">
-        {/* Toast de Confirmação */}
+        {/* Toast de Notificação */}
         {toastMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-700/80 text-emerald-200 text-xs flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-300">
+          <div
+            className={`p-3.5 rounded-xl border text-xs flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-300 ${
+              toastMessage.type === 'success'
+                ? 'bg-emerald-950/90 border-emerald-700/80 text-emerald-200'
+                : toastMessage.type === 'error'
+                ? 'bg-rose-950/90 border-rose-700/80 text-rose-200'
+                : 'bg-blue-950/90 border-blue-700/80 text-blue-200'
+            }`}
+          >
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span>{toastMessage}</span>
+              {toastMessage.type === 'success' ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-blue-400" />
+              )}
+              <span>{toastMessage.text}</span>
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="text-emerald-400 hover:text-white text-xs px-2"
+              className="text-slate-300 hover:text-white text-xs px-2"
             >
               Fechar
             </button>
           </div>
         )}
 
-        {/* Top summary row */}
+        {/* Top summary bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -131,9 +151,20 @@ export default function AprovacoesPage() {
               <Badge variant="warning">{pendingCount} pendente{pendingCount !== 1 ? 's' : ''}</Badge>
             </h2>
             <p className="text-xs text-slate-400">
-              Arraste ou clique nos cards para revisar a copy do Luca e as tags do Nando antes de publicar.
+              Clique nos cards para abrir o editor e revisar a copy do Luca e as tags do Nando.
             </p>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchVideos}
+            isLoading={isLoading}
+            className="text-xs gap-1.5 border-slate-800 bg-slate-900/60"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
+            <span>Atualizar Esteira</span>
+          </Button>
         </div>
 
         {/* Kanban Board */}
