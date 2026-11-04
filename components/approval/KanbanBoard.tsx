@@ -5,11 +5,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StatusPill } from '@/components/ui/StatusPill';
+import { YoutubeIcon } from '@/components/ui/Icons';
 import { 
   Lightbulb, 
   Clock, 
   CheckCircle, 
-  Youtube, 
   ArrowRight, 
   FileText, 
   Tag, 
@@ -62,7 +62,7 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: 'publicado',
     title: 'Publicados',
-    icon: Youtube,
+    icon: YoutubeIcon,
     color: 'text-purple-400',
     badgeVariant: 'purple',
     description: 'Ao vivo no YouTube',
