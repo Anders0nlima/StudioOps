@@ -59,7 +59,7 @@
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "create",
         "table": "agent_logs",
         "columns": "agente, mensagem, video_id, tipo, estado",
         "values": "'nando', 'Chefe, o roteiro do Luca e os metadados de SEO estão prontos. Aguardando sua aprovação para agendar!', ={{ $('Webhook Trigger').item.json.body.video_id }}, 'info', 'waiting_approval'"

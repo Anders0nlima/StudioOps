@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "create",
         "table": "agent_logs",
         "columns": "agente, mensagem, tipo, estado",
         "values": "'endu', 'Análise de métricas e sentimento finalizada. Identifiquei novos temas pedidos pela audiência!', 'info', 'done'"

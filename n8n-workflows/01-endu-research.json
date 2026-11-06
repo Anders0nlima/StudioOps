@@ -25,7 +25,7 @@
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "create",
         "table": "videos",
         "columns": "titulo, ideia, status",
         "values": "={{ $json.titulo }}, ={{ $json.resumo }}, 'ideacao'"
@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "create",
         "table": "agent_logs",
         "columns": "agente, mensagem, tipo, estado",
         "values": "'endu', 'Identifiquei 3 novas oportunidades de conteúdo com alto potencial de busca e engajamento.', 'success', 'done'"

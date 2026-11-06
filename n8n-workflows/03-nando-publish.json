@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "operation": "insert",
+        "operation": "create",
         "table": "agent_logs",
         "columns": "agente, mensagem, video_id, tipo, estado",
         "values": "'nando', '🚀 Vídeo publicado e agendado com sucesso no YouTube!', ={{ $('Webhook Trigger').item.json.body.video_id }}, 'success', 'done'"
