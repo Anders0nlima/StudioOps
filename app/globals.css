@@ -1,26 +1,245 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --pixel-bg-warm: #1a162b;
+  --pixel-border-color: #3b2d54;
+  --pixel-gold: #f59e0b;
+  --pixel-green: #10b981;
+  --pixel-purple: #8b5cf6;
+  --pixel-cyan: #06b6d4;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #090c10;
+  color: #e6edf3;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  image-rendering: pixelated;
 }
+
+/* Tipografias Retrô Arcade / 16-Bit */
+.font-arcade {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: -0.5px;
+}
+
+.font-pixel {
+  font-family: 'Silkscreen', monospace;
+}
+
+.font-terminal {
+  font-family: 'VT323', monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+}
+
+/* Molduras e Janelas de Pixel Art */
+.pixel-box {
+  background: #111422;
+  border: 3px solid #232942;
+  box-shadow: 
+    inset -3px -3px 0px 0px #0b0d17,
+    inset 3px 3px 0px 0px #2a3250,
+    3px 3px 0px 0px #05070a;
+  border-radius: 0px !important;
+}
+
+.pixel-box-gold {
+  background: #161329;
+  border: 3px solid #f59e0b;
+  box-shadow: 
+    inset -3px -3px 0px 0px #78350f,
+    inset 3px 3px 0px 0px #fcd34d,
+    3px 3px 0px 0px #000000;
+  border-radius: 0px !important;
+}
+
+.pixel-box-cyan {
+  background: #0f172a;
+  border: 3px solid #06b6d4;
+  box-shadow: 
+    inset -3px -3px 0px 0px #0e7490,
+    inset 3px 3px 0px 0px #67e8f9,
+    3px 3px 0px 0px #000000;
+  border-radius: 0px !important;
+}
+
+.pixel-box-purple {
+  background: #15102a;
+  border: 3px solid #8b5cf6;
+  box-shadow: 
+    inset -3px -3px 0px 0px #5b21b6,
+    inset 3px 3px 0px 0px #c4b5fd,
+    3px 3px 0px 0px #000000;
+  border-radius: 0px !important;
+}
+
+/* Botões Estilo Arcade 3D com Clique Realista */
+.pixel-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 10px 16px;
+  text-transform: uppercase;
+  border: 2px solid #000;
+  border-radius: 0px !important;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.05s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pixel-btn-primary {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 
+    inset 2px 2px 0px #a5b4fc,
+    inset -2px -2px 0px #3730a3,
+    0px 4px 0px #1e1b4b;
+}
+
+.pixel-btn-primary:hover {
+  background: #4f46e5;
+}
+
+.pixel-btn-primary:active {
+  transform: translateY(3px);
+  box-shadow: 
+    inset 2px 2px 0px #a5b4fc,
+    inset -2px -2px 0px #3730a3,
+    0px 1px 0px #1e1b4b;
+}
+
+.pixel-btn-gold {
+  background: #f59e0b;
+  color: #000000;
+  box-shadow: 
+    inset 2px 2px 0px #fef08a,
+    inset -2px -2px 0px #b45309,
+    0px 4px 0px #451a03;
+}
+
+.pixel-btn-gold:hover {
+  background: #d97706;
+}
+
+.pixel-btn-gold:active {
+  transform: translateY(3px);
+  box-shadow: 
+    inset 2px 2px 0px #fef08a,
+    inset -2px -2px 0px #b45309,
+    0px 1px 0px #451a03;
+}
+
+.pixel-btn-success {
+  background: #10b981;
+  color: #000000;
+  box-shadow: 
+    inset 2px 2px 0px #a7f3d0,
+    inset -2px -2px 0px #047857,
+    0px 4px 0px #064e3b;
+}
+
+.pixel-btn-success:hover {
+  background: #059669;
+}
+
+.pixel-btn-success:active {
+  transform: translateY(3px);
+  box-shadow: 
+    inset 2px 2px 0px #a7f3d0,
+    inset -2px -2px 0px #047857,
+    0px 1px 0px #064e3b;
+}
+
+/* Balão de Diálogo de RPG (Pixel Speech Bubble) */
+.pixel-bubble {
+  position: relative;
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 6px 10px;
+  font-family: 'Silkscreen', monospace;
+  font-size: 11px;
+  border-radius: 0px;
+}
+
+.pixel-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 20px;
+  border-width: 8px 8px 0;
+  border-style: solid;
+  border-color: #ffffff transparent;
+  display: block;
+  width: 0;
+}
+
+.pixel-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 19px;
+  border-width: 9px 9px 0;
+  border-style: solid;
+  border-color: #000000 transparent;
+  display: block;
+  width: 0;
+}
+
+/* Piso Quadriculado Isométrico de Escritório Retrô */
+.pixel-office-floor {
+  background-color: #1e1933;
+  background-image: 
+    linear-gradient(45deg, #272142 25%, transparent 25%), 
+    linear-gradient(-45deg, #272142 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #272142 75%), 
+    linear-gradient(-45deg, transparent 75%, #272142 75%);
+  background-size: 32px 32px;
+  background-position: 0 0, 0 16px, 16px -16px, -16px 0px;
+}
+
+/* Efeito Sutil de Scanline CRT Retrô */
+.crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Animações Pixeladas Clássicas */
+@keyframes pixel-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pixel-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes crt-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6)); }
+  50% { filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.9)); }
+}
+
+.animate-pixel-bounce {
+  animation: pixel-bounce 1.4s steps(2, start) infinite;
+}
+
+.animate-pixel-blink {
+  animation: pixel-blink 0.8s steps(1) infinite;
+}
+
+.crt-screen-green {
+  animation: crt-glow 2s ease-in-out infinite;
+}
+
