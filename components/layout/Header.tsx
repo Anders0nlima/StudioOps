@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Radio, ShieldCheck, Cpu } from 'lucide-react';
+import { Radio, ShieldCheck, Cpu } from 'lucide-react';
 
 interface HeaderProps {
   title?: string;
@@ -107,4 +107,3 @@ export function Header({
     </header>
   );
 }
-

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { triggerScriptAndSEOAgents } from '@/lib/webhooks';
 import { createServerClient } from '@/lib/supabase/server';
+import { dispatchAIJob } from '@/lib/queue/ai-queue';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { video_id, ideia, titulo } = body;
+    const { video_id, ideia, titulo, formato = 'short' } = body;
 
     if (!video_id && !ideia) {
       return NextResponse.json(
@@ -14,57 +15,85 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Chamar Webhook do n8n (Agente Luca Claude 3.5 + Agente Nando GPT-4o)
+    // 1. Tentar gerar roteiro e cenas verticais via Fila de IA (Colab GPU ou Worker Local)
+    const scriptJob = await dispatchAIJob('script', { video_id, ideia, titulo, formato }, video_id);
+    const seoJob = await dispatchAIJob('seo', { video_id, titulo: titulo || ideia }, video_id);
+
+    // 2. Chamar Webhook do n8n para manter o fluxo orquestrado
     const webhookResult = await triggerScriptAndSEOAgents({
       video_id: video_id || 'temp-id',
       ideia: ideia || titulo,
       titulo,
     });
 
-    // 2. Roteiro gerado pelo Luca e SEO formulado pelo Nando
-    const generatedScript = `[INTRO - 0:00]
-"Se você quer colocar inteligência artificial para trabalhar no seu canal do YouTube sem parecer um robô genérico, preste muita atenção neste vídeo. Nos próximos minutos, você vai ver o fluxo exato que grandes canais estão usando para automatizar roteiros e publicação mantendo a taxa de clique alta."
+    // 3. Cenas e roteiro (prioridade: Colab GPU / Worker -> Roteiro vertical estruturado)
+    const scenes = scriptJob.resultado?.scenes || [
+      {
+        ordem: 1,
+        texto: "Pare agora de criar vídeos manualmente. Em 2026, agentes de IA autônomos fazem tudo em 60 segundos.",
+        duracao: 4.5,
+        termo_visual: "futuristic AI digital robot working fast",
+        prompt_capcut: "Cinematic close-up of a digital agent holographic screen glowing neon blue 9:16",
+      },
+      {
+        ordem: 2,
+        texto: "O segredo não é um único modelo genérico. Você precisa de 3 especialistas: Endu para dados, Luca para roteiro e Nando para SEO.",
+        duracao: 6.0,
+        termo_visual: "three glowing AI nodes network connection",
+        prompt_capcut: "Three AI agent nodes connecting with high speed neon light pulses 9:16",
+      },
+      {
+        ordem: 3,
+        texto: "Quer ver essa esteira completa rodando no seu canal? Comente 'STUDIOOPS' para receber o código agora mesmo!",
+        duracao: 4.5,
+        termo_visual: "smartphone alert notification youtube shorts",
+        prompt_capcut: "Glowing smartphone displaying incoming subscriber alert animation 9:16",
+      },
+    ];
 
-[BLOCO 1 - 01:20: O Papel de Cada Agente]
-"O maior erro de quem tenta usar IA no YouTube é pedir tudo para um único modelo genérico. A estratégia vencedora é dividir em especialistas:
-1. Um modelo para dados e pesquisa de comentários.
-2. Um modelo com alta habilidade narrativa para escrever o roteiro.
-3. Um modelo treinado em SEO para otimizar títulos virais e tags."
+    const generatedScript = scriptJob.resultado?.roteiro || scenes.map((s: any) => `[Cena ${s.ordem} - ${s.duracao}s]\n"${s.texto}"\n(Visual: ${s.termo_visual})`).join('\n\n');
 
-[BLOCO 2 - 03:40: Retenção e Copywriting]
-"A retenção nos primeiros 30 segundos define se o algoritmo vai recomendar seu vídeo para 100 ou 100.000 pessoas. Por isso, nunca comece pedindo inscrição. Comece entregando a promessa principal imediatamente."
-
-[CTA FINAL - 07:15]
-"Se você quer implementar essa esteira no seu canal, comente 'STUDIOOPS' aqui embaixo que vou te enviar a arquitetura completa. Não esqueça de deixar o like e até o próximo vídeo!"`;
-
-    const generatedSEO = {
+    const generatedSEO = seoJob.resultado?.canais?.youtube_shorts || {
       titulo_otimizado: titulo 
-        ? `${titulo} (Guia Completo 2026)` 
-        : `Como Usar Agentes de IA no YouTube em 2026 (Passo a Passo)`,
-      tags: ['inteligencia-artificial', 'youtube-ia', 'roteiro-ia', 'chatgpt', 'claude-3-5', 'n8n', 'automacao-youtube', 'produtividade', 'seo-youtube', 'marketing-digital'],
-      descricao: `Neste vídeo, aprenda como orquestrar agentes de IA autônomos para gerenciar a produção de conteúdo do seu canal no YouTube com supervisão humana (Human-in-the-Loop).\n\n⏰ Timestamps:\n0:00 - Introdução & Gancho\n1:20 - Especialização de Agentes\n3:40 - Técnicas de Retenção\n7:15 - Conclusão & Próximos Passos`,
-      justificativa_seo: 'Título formulado com gatilho de novidade (2026) e parênteses de alta conversão para maximizar o CTR.',
+        ? `${titulo} #Shorts` 
+        : `Como Criar Vídeos Curtos com Agentes de IA em 60s #Shorts`,
+      tags: ['Shorts', 'YouTubeShorts', 'IA', 'Automacao', 'StudioOps', 'GenAI', 'DicasTech'],
+      descricao: `Aprenda como orquestrar agentes de IA autônomos (Endu, Luca, Nando) para gerar Shorts e Reels virais com supervisão humana (HITL).\n\n#Shorts #IA #Automacao`,
+      justificativa_seo: 'Formatado com gancho imediato, hashtag oficial #Shorts no título e palavras-chave de alta conversão.',
     };
 
-    // 3. Atualizar no Supabase caso configurado
+    const multiChannelData = seoJob.resultado?.canais || {
+      youtube_shorts: generatedSEO,
+      tiktok: { legenda: `${titulo || 'Automação de Conteúdo'} 🤯 #ia #tecnologia #shorts #studioops` },
+      instagram_reels: { legenda: `Vídeos curtos automatizados com IA em 2026 🚀 Salve para não perder!\n#reels #ia` },
+    };
+
+    // 4. Atualizar no Supabase
     const supabase = createServerClient();
     try {
       if (video_id) {
         await supabase
           .from('videos')
           .update({
-            titulo: generatedSEO.titulo_otimizado,
+            titulo: generatedSEO.titulo_otimizado || titulo,
             roteiro: generatedScript,
-            metadata_seo: generatedSEO,
+            scenes,
+            metadata_seo: {
+              ...generatedSEO,
+              multichannel: multiChannelData,
+            },
+            formato,
             status: 'pendente',
             updated_at: new Date().toISOString(),
           })
           .eq('id', video_id);
 
+        const sourceLabel = scriptJob.source === 'colab_gpu' ? 'Colab GPU' : scriptJob.source === 'local_worker' ? 'Worker Local' : 'Orquestrador';
+
         await supabase.from('agent_logs').insert({
           agente: 'nando',
           video_id,
-          mensagem: `Chefe, finalizei o SEO e o Luca concluiu o roteiro para "${generatedSEO.titulo_otimizado}". Aguardo sua aprovação para agendar!`,
+          mensagem: `Chefe, finalizei o SEO multicanal e o Luca concluiu o roteiro em ${scenes.length} cenas verticais via ${sourceLabel}. Aguardando sua aprovação!`,
           tipo: 'info',
           estado: 'waiting_approval',
         });
@@ -77,12 +106,16 @@ export async function POST(request: Request) {
       success: true,
       agentes: ['luca', 'nando'],
       video_id,
-      titulo_otimizado: generatedSEO.titulo_otimizado,
+      titulo_otimizado: generatedSEO.titulo_otimizado || titulo,
       roteiro: generatedScript,
+      scenes,
       metadata_seo: generatedSEO,
+      multichannel: multiChannelData,
       status: 'pendente',
+      source: scriptJob.source,
+      worker_id: scriptJob.worker_id,
       webhookSource: webhookResult.source,
-      message: 'Roteiro e SEO formulados. Aguardando aprovação do Chefe.',
+      message: 'Roteiro em cenas verticais e SEO formulados. Aguardando aprovação do Chefe.',
     });
   } catch (error: any) {
     return NextResponse.json(
