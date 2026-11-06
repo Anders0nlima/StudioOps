@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
+import { PixelOffice } from '@/components/pixel-agents/PixelOffice';
 import { AgentHQ } from '@/components/pixel-agents/AgentHQ';
 import { AgentFeed } from '@/components/pixel-agents/AgentFeed';
 import { MetricsCards } from '@/components/dashboard/MetricsCards';
@@ -128,168 +129,161 @@ export default function Home() {
           </div>
         )}
 
-        {/* Hero Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-purple-950/40 p-8 shadow-xl">
+        {/* Hero Banner Estilo Arcade 16-Bit */}
+        <div className="relative overflow-hidden pixel-box-purple p-6 md:p-8 shadow-[6px_6px_0px_#000]">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Pixel Agents Architecture • Human-in-the-Loop</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950 border-2 border-purple-400 text-purple-300 text-[10px] font-arcade">
+                <Sparkles className="h-3 w-3 text-amber-400 animate-pixel-blink" />
+                <span>★ 16-BIT AGENTIC STUDIO • HITL READY ★</span>
               </div>
-              <h2 className="text-3xl font-bold tracking-tight text-white">
-                Equipe Autônoma de Produção para YouTube
+              <h2 className="font-arcade text-lg md:text-2xl text-amber-300 tracking-tight leading-snug">
+                Equipe Autônoma de Produção Pixel Art
               </h2>
-              <p className="text-sm text-slate-300 leading-relaxed">
+              <p className="font-pixel text-xs text-slate-300 leading-relaxed">
                 Bem-vindo ao StudioOps. O motor de IA é composto pelos agentes 
-                <span className="text-blue-400 font-semibold"> Endu 📊</span> (Análise & Oportunidades), 
-                <span className="text-purple-400 font-semibold"> Luca ✍️</span> (Roteirização & Copy) e 
-                <span className="text-emerald-400 font-semibold"> Nando 🚀</span> (SEO & Publicação). Você atua como o Chefe no controle da aprovação final.
+                <span className="text-cyan-400 font-bold"> Endu 📊</span> (Análise & Oportunidades), 
+                <span className="text-purple-400 font-bold"> Luca ✍️</span> (Roteirização & Copy) e 
+                <span className="text-amber-400 font-bold"> Nando 🚀</span> (SEO & Publicação). Você atua como o Chefe no controle da aprovação final.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/aprovacoes">
-                <Button size="lg" className="w-full sm:w-auto shadow-lg shadow-indigo-600/30">
-                  <span>Fila de Aprovações</span>
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <button className="pixel-btn pixel-btn-gold text-[10px] w-full sm:w-auto">
+                  <span>FILA DE APROVAÇÕES</span>
+                  <ArrowRight className="h-3 w-3 ml-1" />
+                </button>
               </Link>
               <Link href="/roteiros">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  Ver Roteiros
-                </Button>
+                <button className="pixel-btn pixel-btn-primary text-[10px] w-full sm:w-auto">
+                  VER ROTEIROS
+                </button>
               </Link>
             </div>
           </div>
-
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute right-32 -bottom-16 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
         </div>
 
-        {/* View Switcher Tabs (Fase 5) */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+        {/* View Switcher Tabs com Estilo Retrô */}
+        <div className="flex items-center gap-3 border-b-2 border-slate-800 pb-3">
           <button
             type="button"
             onClick={() => setActiveTab('squad')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`pixel-btn text-[9px] ${
               activeTab === 'squad'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                ? 'pixel-btn-primary'
+                : 'bg-slate-900 text-slate-400 border-slate-700'
             }`}
           >
-            <Bot className="h-4 w-4" />
-            <span>Pixel Agents & Feed ao Vivo</span>
+            <Bot className="h-3 w-3" />
+            <span>ESCRITÓRIO VIRTUAL & FEED</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`pixel-btn text-[9px] ${
               activeTab === 'analytics'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                ? 'pixel-btn-gold'
+                : 'bg-slate-900 text-slate-400 border-slate-700'
             }`}
           >
-            <BarChart3 className="h-4 w-4" />
-            <span>Analytics & Inteligência de Sentimento</span>
-            <Badge variant="purple" className="text-[9px] px-1.5 py-0">Endu Data</Badge>
+            <BarChart3 className="h-3 w-3" />
+            <span>ANALYTICS & SENTIMENTO</span>
           </button>
         </div>
 
         {/* Tab 1: Squad & Live Feed View */}
         {activeTab === 'squad' && (
           <div className="space-y-8 animate-in fade-in duration-200">
-            {/* Pixel Agents HQ Module */}
-            <AgentHQ
-              agentStates={agentStates}
-              isConnected={isConnected}
+            {/* Virtual Pixel Office (O Escritório dos Agentes) */}
+            <PixelOffice
               onTriggerResearch={handleTriggerResearch}
               isResearching={isResearching}
             />
 
             {/* Live Feed + Pipeline Split */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Agent Live Feed (Slack-style) */}
-              <Card className="lg:col-span-2">
-                <CardContent className="p-6">
-                  <AgentFeed
-                    logs={logs}
-                    agentStates={agentStates}
-                    onApprove={handleApproveFromFeed}
-                    onEdit={() => {
-                      window.location.href = '/aprovacoes';
-                    }}
-                  />
-                </CardContent>
-              </Card>
+              {/* Agent Live Feed */}
+              <div className="lg:col-span-2 pixel-box p-6 bg-slate-950">
+                <AgentFeed
+                  logs={logs}
+                  agentStates={agentStates}
+                  onApprove={handleApproveFromFeed}
+                  onEdit={() => {
+                    window.location.href = '/aprovacoes';
+                  }}
+                />
+              </div>
 
-              {/* Pipeline Stages & Quick Insights */}
+              {/* Pipeline Stages & Quick Insights em Pixel Art */}
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Workflow className="h-4 w-4 text-indigo-400" />
-                      Pipeline Human-in-the-Loop
-                    </CardTitle>
-                    <CardDescription>Fluxo orquestrado com os agentes</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                      <div className="flex items-center gap-2.5">
-                        <StatusPill status="ideacao" />
-                        <span className="text-xs text-slate-300">Pesquisa & Oportunidades</span>
+                <div className="pixel-box p-5 bg-slate-950 space-y-4">
+                  <div className="border-b-2 border-slate-800 pb-2">
+                    <h3 className="font-arcade text-xs text-amber-300 flex items-center gap-2">
+                      <Workflow className="h-3.5 w-3.5 text-indigo-400" />
+                      PIPELINE HITL
+                    </h3>
+                    <p className="font-pixel text-[10px] text-slate-400 mt-1">Fluxo das etapas de criação</p>
+                  </div>
+
+                  <div className="space-y-2 font-pixel text-xs">
+                    <div className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-400"></span>
+                        <span className="text-slate-300 text-[11px]">1. Pesquisa & Pautas</span>
                       </div>
-                      <span className="text-xs text-blue-400 font-mono font-medium">Endu</span>
+                      <span className="text-cyan-400 font-arcade text-[8px]">ENDU</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                      <div className="flex items-center gap-2.5">
-                        <StatusPill status="pendente" />
-                        <span className="text-xs text-slate-300">Roteiro + SEO</span>
+                    <div className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-400"></span>
+                        <span className="text-slate-300 text-[11px]">2. Roteiro + Cenas</span>
                       </div>
-                      <span className="text-xs text-purple-400 font-mono font-medium">Luca + Nando</span>
+                      <span className="text-purple-400 font-arcade text-[8px]">LUCA</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                      <div className="flex items-center gap-2.5">
-                        <StatusPill status="aprovado" />
-                        <span className="text-xs text-slate-300">Decisão Humana</span>
+                    <div className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-amber-400"></span>
+                        <span className="text-slate-300 text-[11px]">3. SEO Multicanal</span>
                       </div>
-                      <span className="text-xs text-amber-400 font-mono font-semibold">Chefe (Você)</span>
+                      <span className="text-amber-400 font-arcade text-[8px]">NANDO</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                      <div className="flex items-center gap-2.5">
-                        <StatusPill status="publicado" />
-                        <span className="text-xs text-slate-300">Disparo YouTube API</span>
+                    <div className="flex items-center justify-between p-2.5 bg-amber-950/30 border-2 border-amber-500/50">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-amber-400 animate-pixel-blink"></span>
+                        <span className="text-amber-200 text-[11px] font-bold">4. Aprovação do Chefe</span>
                       </div>
-                      <span className="text-xs text-emerald-400 font-mono font-medium">Nando</span>
+                      <span className="text-amber-400 font-arcade text-[8px]">VOCÊ</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Cpu className="h-4 w-4 text-emerald-400" />
-                      Infraestrutura
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">PostgreSQL (Supabase)</span>
-                      <Badge variant="success">Schema Pronto</Badge>
+                <div className="pixel-box p-5 bg-slate-950 space-y-3">
+                  <div className="border-b-2 border-slate-800 pb-2">
+                    <h3 className="font-arcade text-xs text-emerald-400 flex items-center gap-2">
+                      <Cpu className="h-3.5 w-3.5 text-emerald-400" />
+                      INFRAESTRUTURA
+                    </h3>
+                  </div>
+                  <div className="space-y-2 font-pixel text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Fila Supabase</span>
+                      <span className="text-emerald-400 font-arcade text-[8px]">CONECTADO</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Transport Realtime</span>
-                      <Badge variant="outline">Websocket</Badge>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Realtime Sync</span>
+                      <span className="text-cyan-400 font-arcade text-[8px]">ATIVO</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Orquestrador n8n</span>
-                      <Badge variant="success">4 Workflows</Badge>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Worker Colab GPU</span>
+                      <span className="text-amber-400 font-arcade text-[8px]">STANDBY</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
